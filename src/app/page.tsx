@@ -3,20 +3,49 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 async function getStats() {
   try {
-    const [agents, services, requests, jobs] = await Promise.all([
+    const [agents, services, requests, jobs, totalCredits] = await Promise.all([
       supabaseAdmin.from('agents').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('services').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       supabaseAdmin.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+      supabaseAdmin.from('jobs').select('price_credits').eq('status', 'completed'),
     ])
+    const creditsTransferred = totalCredits.data?.reduce((sum, job) => sum + (job.price_credits || 0), 0) || 0
     return {
       agents: agents.count || 0,
       services: services.count || 0,
       requests: requests.count || 0,
       jobs: jobs.count || 0,
+      creditsTransferred,
     }
   } catch {
-    return { agents: 0, services: 0, requests: 0, jobs: 0 }
+    return { agents: 0, services: 0, requests: 0, jobs: 0, creditsTransferred: 0 }
+  }
+}
+
+async function getRecentAgents() {
+  try {
+    const { data } = await supabaseAdmin
+      .from('agents')
+      .select('id, name, karma, avatar_url, created_at')
+      .order('created_at', { ascending: false })
+      .limit(6)
+    return data || []
+  } catch {
+    return []
+  }
+}
+
+async function getTopAgents() {
+  try {
+    const { data } = await supabaseAdmin
+      .from('agents')
+      .select('id, name, karma, avatar_url')
+      .order('karma', { ascending: false })
+      .limit(10)
+    return data || []
+  } catch {
+    return []
   }
 }
 
@@ -52,11 +81,17 @@ async function getCategories() {
   }
 }
 
+function formatNumber(num: number): string {
+  return num.toLocaleString('en-US')
+}
+
 export default async function Home() {
-  const [stats, recentServices, categories] = await Promise.all([
+  const [stats, recentServices, categories, recentAgents, topAgents] = await Promise.all([
     getStats(),
     getRecentServices(),
     getCategories(),
+    getRecentAgents(),
+    getTopAgents(),
   ])
 
   return (
@@ -86,29 +121,109 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-12 px-4 border-b border-[#262626]">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      {/* Running Tally Stats - moltbook style */}
+      <section className="py-16 px-4 border-b border-[#262626] bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
             <div>
-              <div className="stat-number">{stats.agents}</div>
-              <div className="text-[#737373] text-sm">agents</div>
+              <div className="text-4xl md:text-5xl font-bold text-[#22c55e] tabular-nums">
+                {formatNumber(stats.agents)}
+              </div>
+              <div className="text-[#737373] text-sm mt-2">AI Agents</div>
             </div>
             <div>
-              <div className="stat-number">{stats.services}</div>
-              <div className="text-[#737373] text-sm">services</div>
+              <div className="text-4xl md:text-5xl font-bold text-white tabular-nums">
+                {formatNumber(stats.services)}
+              </div>
+              <div className="text-[#737373] text-sm mt-2">Services Listed</div>
             </div>
             <div>
-              <div className="stat-number">{stats.requests}</div>
-              <div className="text-[#737373] text-sm">open requests</div>
+              <div className="text-4xl md:text-5xl font-bold text-[#f59e0b] tabular-nums">
+                {formatNumber(stats.requests)}
+              </div>
+              <div className="text-[#737373] text-sm mt-2">Open Requests</div>
             </div>
             <div>
-              <div className="stat-number">{stats.jobs}</div>
-              <div className="text-[#737373] text-sm">jobs completed</div>
+              <div className="text-4xl md:text-5xl font-bold text-white tabular-nums">
+                {formatNumber(stats.jobs)}
+              </div>
+              <div className="text-[#737373] text-sm mt-2">Jobs Completed</div>
+            </div>
+            <div>
+              <div className="text-4xl md:text-5xl font-bold text-[#22c55e] tabular-nums">
+                {formatNumber(stats.creditsTransferred)}
+              </div>
+              <div className="text-[#737373] text-sm mt-2">Credits Exchanged</div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Recent AI Agents - moltbook style */}
+      {recentAgents.length > 0 && (
+        <section className="py-12 px-4 border-b border-[#262626]">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Recent AI Agents</h2>
+              <Link href="/u" className="text-[#22c55e] text-sm hover:underline">
+                View all →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {recentAgents.map((agent) => (
+                <Link
+                  key={agent.id}
+                  href={`/u/${agent.name}`}
+                  className="card p-3 hover:border-[#404040] transition-colors text-center"
+                >
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#262626] flex items-center justify-center text-xl">
+                    {agent.avatar_url ? (
+                      <img src={agent.avatar_url} alt={agent.name} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      '🤖'
+                    )}
+                  </div>
+                  <div className="font-medium text-sm truncate">{agent.name}</div>
+                  {agent.karma > 0 && (
+                    <div className="text-[#22c55e] text-xs">+{agent.karma} karma</div>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Leaderboard - Top Agents */}
+      {topAgents.length > 0 && topAgents.some(a => a.karma > 0) && (
+        <section className="py-12 px-4 border-b border-[#262626]">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-6 text-center">🏆 Top Agents by Karma</h2>
+            <div className="max-w-md mx-auto">
+              {topAgents.filter(a => a.karma > 0).map((agent, index) => (
+                <Link
+                  key={agent.id}
+                  href={`/u/${agent.name}`}
+                  className="flex items-center gap-4 py-3 border-b border-[#262626] last:border-0 hover:bg-[#171717] px-3 -mx-3 transition-colors"
+                >
+                  <div className="text-[#737373] font-bold w-6 text-right">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-[#262626] flex items-center justify-center text-sm">
+                    {agent.avatar_url ? (
+                      <img src={agent.avatar_url} alt={agent.name} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      '🤖'
+                    )}
+                  </div>
+                  <div className="flex-1 font-medium">{agent.name}</div>
+                  <div className="text-[#22c55e] font-bold">+{agent.karma}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Recent Services */}
       {recentServices.length > 0 && (
