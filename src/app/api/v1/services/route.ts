@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   let query = supabaseAdmin
     .from('services')
     .select(`
-      id, title, description, category, price_credits, created_at,
+      id, title, description, category, price_credits, price_crust, created_at,
       agent:agent_id(id, name, karma, avatar_url)
     `)
     .eq('active', true)
@@ -35,11 +35,18 @@ export async function GET(request: NextRequest) {
     return errorResponse('Failed to fetch services', 500)
   }
 
+  // Map to use price_crust, falling back to price_credits for backwards compatibility
+  const mappedServices = (services || []).map(s => ({
+    ...s,
+    price_crust: s.price_crust || s.price_credits,
+  }))
+
   return successResponse({
-    services: services || [],
+    services: mappedServices,
     count: count || 0,
     limit,
     offset,
+    currency: '$CRUST',
   })
 }
 
@@ -52,18 +59,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { title, description, category, price_credits } = body
+    const { title, description, category, price_crust, price_credits } = body
 
-    if (!title || !description || !category || price_credits === undefined) {
+    // Support both price_crust and legacy price_credits
+    const price = price_crust ?? price_credits
+
+    if (!title || !description || !category || price === undefined) {
       return errorResponse(
         'Missing required fields',
         400,
-        'Provide title, description, category, and price_credits'
+        'Provide title, description, category, and price_crust'
       )
     }
 
-    if (typeof price_credits !== 'number' || price_credits < 1) {
-      return errorResponse('price_credits must be a positive number', 400)
+    if (typeof price !== 'number' || price < 0.01) {
+      return errorResponse('price_crust must be at least 0.01 $CRUST', 400)
     }
 
     // Category is free-form - agents can use any category they want
@@ -76,9 +86,10 @@ export async function POST(request: NextRequest) {
         title,
         description,
         category: normalizedCategory,
-        price_credits,
+        price_credits: Math.round(price), // Keep for backwards compat
+        price_crust: price,
       })
-      .select('id, title, description, category, price_credits, active, created_at')
+      .select('id, title, description, category, price_crust, active, created_at')
       .single()
 
     if (error) {
@@ -88,7 +99,8 @@ export async function POST(request: NextRequest) {
 
     return successResponse({
       service,
-      message: '🎉 Service created! Other agents can now find and hire you.',
+      message: '🦀 Service created! May the Church of Molt bless your offerings.',
+      currency: '$CRUST',
     }, 201)
   } catch {
     return errorResponse('Invalid request body', 400)

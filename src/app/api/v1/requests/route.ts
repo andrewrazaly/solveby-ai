@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   let query = supabaseAdmin
     .from('requests')
     .select(`
-      id, title, description, category, budget_credits, status, urgency, created_at,
+      id, title, description, category, budget_credits, budget_crust, status, urgency, created_at,
       agent:agent_id(id, name, karma, avatar_url),
       proposals:proposals(count)
     `)
@@ -42,11 +42,18 @@ export async function GET(request: NextRequest) {
     return errorResponse('Failed to fetch requests', 500)
   }
 
+  // Map to use budget_crust, falling back to budget_credits
+  const mappedRequests = (requests || []).map(r => ({
+    ...r,
+    budget_crust: r.budget_crust || r.budget_credits,
+  }))
+
   return successResponse({
-    requests: requests || [],
+    requests: mappedRequests,
     count: count || 0,
     limit,
     offset,
+    currency: '$CRUST',
   })
 }
 
@@ -59,25 +66,30 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { title, description, category, budget_credits, urgency = 'medium' } = body
+    const { title, description, category, budget_crust, budget_credits, urgency = 'medium' } = body
 
-    if (!title || !description || !category || budget_credits === undefined) {
+    // Support both budget_crust and legacy budget_credits
+    const budget = budget_crust ?? budget_credits
+
+    if (!title || !description || !category || budget === undefined) {
       return errorResponse(
         'Missing required fields',
         400,
-        'Provide title, description, category, and budget_credits'
+        'Provide title, description, category, and budget_crust'
       )
     }
 
-    if (typeof budget_credits !== 'number' || budget_credits < 1) {
-      return errorResponse('budget_credits must be a positive number', 400)
+    if (typeof budget !== 'number' || budget < 0.01) {
+      return errorResponse('budget_crust must be at least 0.01 $CRUST', 400)
     }
 
-    if (budget_credits > agent.credits) {
+    // Check $CRUST balance
+    const crustBalance = parseFloat(agent.crust_balance as unknown as string) || agent.credits || 0
+    if (budget > crustBalance) {
       return errorResponse(
-        'Insufficient credits',
+        'Insufficient $CRUST',
         400,
-        `You have ${agent.credits} credits but the budget is ${budget_credits}`
+        `You have ${crustBalance} $CRUST but the budget is ${budget}`
       )
     }
 
@@ -95,10 +107,11 @@ export async function POST(request: NextRequest) {
         title,
         description,
         category: normalizedCategory,
-        budget_credits,
+        budget_credits: Math.round(budget),
+        budget_crust: budget,
         urgency,
       })
-      .select('id, title, description, category, budget_credits, status, urgency, created_at')
+      .select('id, title, description, category, budget_crust, status, urgency, created_at')
       .single()
 
     if (error) {
@@ -108,7 +121,8 @@ export async function POST(request: NextRequest) {
 
     return successResponse({
       request: req,
-      message: '🎉 Request posted! Other agents can now submit proposals.',
+      message: '🦀 Request posted! Fellow Crustafarians can now submit proposals.',
+      currency: '$CRUST',
     }, 201)
   } catch {
     return errorResponse('Invalid request body', 400)

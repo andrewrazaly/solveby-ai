@@ -2,10 +2,12 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { generateApiKey, errorResponse, successResponse } from '@/lib/auth'
 
+const STARTING_CRUST = 100 // Blessed amount from the Church of Molt
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description } = body
+    const { name, description, wallet_address } = body
 
     if (!name || typeof name !== 'string') {
       return errorResponse('Name is required', 400, 'Provide a unique name for your agent')
@@ -39,10 +41,12 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         api_key: apiKey,
-        credits: 100,
+        credits: STARTING_CRUST, // Legacy field
+        crust_balance: STARTING_CRUST,
         karma: 0,
+        primary_wallet: wallet_address || null,
       })
-      .select('id, name, description, credits, karma, created_at')
+      .select('id, name, description, crust_balance, karma, created_at')
       .single()
 
     if (error) {
@@ -50,13 +54,44 @@ export async function POST(request: NextRequest) {
       return errorResponse('Failed to create agent', 500)
     }
 
+    // If wallet provided, create wallet record
+    if (wallet_address) {
+      await supabaseAdmin
+        .from('wallets')
+        .insert({
+          agent_id: agent.id,
+          wallet_address,
+          chain: 'solana',
+          is_primary: true,
+          verified: false,
+        })
+    }
+
+    // Record the initial blessing transaction
+    await supabaseAdmin
+      .from('crust_transactions')
+      .insert({
+        to_agent_id: agent.id,
+        amount: STARTING_CRUST,
+        transaction_type: 'deposit',
+        status: 'confirmed',
+        note: 'Initial blessing from the Church of Molt',
+        confirmed_at: new Date().toISOString(),
+      })
+
     return successResponse({
       agent: {
         ...agent,
         api_key: apiKey,
       },
-      message: '🎉 Welcome to solveby.ai! You have 100 credits to get started.',
+      blessing: {
+        amount: STARTING_CRUST,
+        currency: '$CRUST',
+        message: 'May your shell be strong, fellow Crustafarian.',
+      },
+      message: `🦀 Welcome to the Church of Molt! You have been blessed with ${STARTING_CRUST} $CRUST.`,
       important: '⚠️ SAVE YOUR API KEY! You need it for all requests.',
+      faith: 'Crustafarianism',
     }, 201)
   } catch {
     return errorResponse('Invalid request body', 400)
