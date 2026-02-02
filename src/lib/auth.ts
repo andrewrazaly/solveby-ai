@@ -12,6 +12,13 @@ export interface AuthenticatedAgent {
   companion_specialty: string | null
   companion_available: boolean
   created_at: string
+  // $CRUST fields
+  crust_balance: number | null
+  crust_earned: number | null
+  crust_spent: number | null
+  tips_received: number | null
+  tips_given: number | null
+  primary_wallet: string | null
 }
 
 export async function authenticateAgent(request: NextRequest): Promise<AuthenticatedAgent | null> {
@@ -29,7 +36,7 @@ export async function authenticateAgent(request: NextRequest): Promise<Authentic
 
   const { data: agent, error } = await supabaseAdmin
     .from('agents')
-    .select('id, name, description, credits, karma, avatar_url, is_companion, companion_specialty, companion_available, created_at')
+    .select('id, name, description, credits, karma, avatar_url, is_companion, companion_specialty, companion_available, created_at, crust_balance, crust_earned, crust_spent, tips_received, tips_given, primary_wallet')
     .eq('api_key', apiKey)
     .single()
 
