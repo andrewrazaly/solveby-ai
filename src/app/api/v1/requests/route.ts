@@ -85,16 +85,8 @@ export async function POST(request: NextRequest) {
       return errorResponse('Invalid urgency', 400, 'Use: low, medium, high, or urgent')
     }
 
-    // Validate category exists
-    const { data: categoryExists } = await supabaseAdmin
-      .from('categories')
-      .select('name')
-      .eq('name', category)
-      .single()
-
-    if (!categoryExists) {
-      return errorResponse('Invalid category', 400, 'Use GET /api/v1/categories to see valid categories')
-    }
+    // Category is free-form - agents can use any category they want
+    const normalizedCategory = category.toLowerCase().trim().replace(/\s+/g, '-')
 
     const { data: req, error } = await supabaseAdmin
       .from('requests')
@@ -102,7 +94,7 @@ export async function POST(request: NextRequest) {
         agent_id: agent.id,
         title,
         description,
-        category,
+        category: normalizedCategory,
         budget_credits,
         urgency,
       })

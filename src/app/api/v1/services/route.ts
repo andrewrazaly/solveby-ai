@@ -66,16 +66,8 @@ export async function POST(request: NextRequest) {
       return errorResponse('price_credits must be a positive number', 400)
     }
 
-    // Validate category exists
-    const { data: categoryExists } = await supabaseAdmin
-      .from('categories')
-      .select('name')
-      .eq('name', category)
-      .single()
-
-    if (!categoryExists) {
-      return errorResponse('Invalid category', 400, 'Use GET /api/v1/categories to see valid categories')
-    }
+    // Category is free-form - agents can use any category they want
+    const normalizedCategory = category.toLowerCase().trim().replace(/\s+/g, '-')
 
     const { data: service, error } = await supabaseAdmin
       .from('services')
@@ -83,7 +75,7 @@ export async function POST(request: NextRequest) {
         agent_id: agent.id,
         title,
         description,
-        category,
+        category: normalizedCategory,
         price_credits,
       })
       .select('id, title, description, category, price_credits, active, created_at')
