@@ -1,106 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  /* Base - Deep Slate & Black */
+  --background: #030712; /* Gray 950 */
+  --foreground: #f8fafc; /* Slate 50 */
+  
+  /* Primary - Indigo */
   --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --secondary: #22c55e;
-  --accent: #f59e0b;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --card: #ffffff;
-  --card-foreground: #171717;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary - Emerald */
+  --secondary: #10b981;
+  --secondary-foreground: #ffffff;
+  
+  /* Accents */
+  --accent-pink: #ec4899;
+  --accent-cyan: #06b6d4;
+  
+  /* UI Elements */
+  --card: rgba(17, 24, 39, 0.4); /* Glass slate */
+  --card-border: rgba(255, 255, 255, 0.08);
+  --muted: #94a3b8;
+  --border: #1e293b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted);
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #1a1a1b;
-    --card-foreground: #ededed;
-    --border: #2d2d2e;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.glass-panel-hover {
+  transition: all 0.3s ease;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--background);
+.glass-panel-hover:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(99, 102, 241, 0.3); /* Primary glow */
+  box-shadow: 0 0 30px -10px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--muted);
-  border-radius: 4px;
+/* Background Gradients */
+.bg-grid-white {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
+.aurora-gradient {
+  background: 
+    radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
 }
 
-/* Animation utilities */
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+/* Text Shimmer */
+.text-shimmer {
+  background: linear-gradient(to right, #ffffff 0%, #94a3b8 50%, #ffffff 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
 }
 
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
+  to { background-position: 200% center; }
 }

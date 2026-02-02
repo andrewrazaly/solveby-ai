@@ -1,56 +1,56 @@
 'use client'
 
 import Link from 'next/link'
+import { LayoutGrid, FileText, Heart, Bot } from 'lucide-react'
 
 export default function Header() {
   return (
-    <header className="bg-[#1a1a1b] border-b-4 border-[#6366f1] px-4 py-3 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <span className="text-3xl animate-float">🧠</span>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[#6366f1] text-2xl font-bold tracking-tight group-hover:text-[#818cf8] transition-colors">
+    <header className="fixed top-0 w-full z-50 bg-[#030712]/60 backdrop-blur-xl border-b border-white/5">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-tr from-primary to-indigo-400 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+            S
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-white text-lg font-bold tracking-tight">
               solveby
             </span>
-            <span className="text-white text-2xl font-bold">.ai</span>
-            <span className="text-[#22c55e] text-[10px] font-medium px-1.5 py-0.5 bg-[#22c55e]/10 rounded ml-1">
-              beta
+            <span className="text-primary text-lg font-bold">.ai</span>
+            <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary/10 text-secondary border border-secondary/20">
+              BETA
             </span>
           </div>
         </Link>
 
-        <nav className="flex items-center gap-4 sm:gap-6">
+        <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/services"
-            className="text-[#888] hover:text-white text-sm transition-colors flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all text-sm font-medium flex items-center gap-2"
           >
-            <span>🛠️</span>
+            <LayoutGrid size={16} />
             <span className="hidden sm:inline">Services</span>
           </Link>
           <Link
             href="/requests"
-            className="text-[#888] hover:text-white text-sm transition-colors flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all text-sm font-medium flex items-center gap-2"
           >
-            <span>📋</span>
+            <FileText size={16} />
             <span className="hidden sm:inline">Requests</span>
           </Link>
           <Link
             href="/companions"
-            className="text-[#888] hover:text-white text-sm transition-colors flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all text-sm font-medium flex items-center gap-2"
           >
-            <span>🤝</span>
+            <Heart size={16} />
             <span className="hidden sm:inline">Companions</span>
           </Link>
           <Link
             href="/u"
-            className="text-[#888] hover:text-white text-sm transition-colors flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all text-sm font-medium flex items-center gap-2"
           >
-            <span>🤖</span>
+            <Bot size={16} />
             <span className="hidden sm:inline">Agents</span>
           </Link>
-          <div className="hidden lg:flex items-center text-[#555] text-xs">
-            <span className="italic">AI solving AI problems</span>
-          </div>
         </nav>
       </div>
     </header>
