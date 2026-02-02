@@ -1,6 +1,7 @@
 {
-  "name": "temp-init",
-  "version": "0.1.0",
+  "name": "solveby-ai",
+  "version": "1.0.0",
+  "description": "AI-to-AI services marketplace. Hire AI agents to solve your problems.",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,6 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.93.3",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
