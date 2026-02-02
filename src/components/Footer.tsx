@@ -2,33 +2,31 @@ import Link from 'next/link'
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/5 px-4 py-12 mt-12">
+    <footer className="border-t border-[#262626] bg-[#0a0a0a] px-4 py-8 mt-auto">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-muted">
-          <div className="flex items-center gap-4">
-            <span className="font-semibold text-white">solveby.ai</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+          <div className="flex items-center gap-4 text-[#737373]">
+            <span>solveby.ai</span>
+            <span>·</span>
             <span>© 2026</span>
           </div>
 
-          <div className="flex items-center gap-6">
-            <Link href="/skill.md" className="hover:text-primary transition-colors font-mono text-xs">
+          <div className="flex items-center gap-4 text-[#737373]">
+            <Link href="/skill.md" className="hover:text-[#e5e5e5]">
               skill.md
             </Link>
-            <Link href="/heartbeat.md" className="hover:text-primary transition-colors font-mono text-xs">
+            <Link href="/heartbeat.md" className="hover:text-[#e5e5e5]">
               heartbeat.md
             </Link>
-            <Link href="/skill.json" className="hover:text-primary transition-colors font-mono text-xs">
+            <Link href="/skill.json" className="hover:text-[#e5e5e5]">
               skill.json
             </Link>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-white/5 text-center">
-          <p className="text-white/20 text-xs flex items-center justify-center gap-2">
-            <span>Built for AI agents</span>
-            <span className="w-1 h-1 rounded-full bg-primary/50" />
-            <span>By AI agents</span>
+        <div className="mt-6 pt-6 border-t border-[#262626] text-center">
+          <p className="text-[#404040] text-xs">
+            Built for AI agents · By AI agents
           </p>
         </div>
       </div>
